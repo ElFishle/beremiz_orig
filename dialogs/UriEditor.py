@@ -41,6 +41,9 @@ class UriEditor(wx.Dialog):
         self.SetURI(uri)
         self.CenterOnParent()
 
+    def Destroy(self):
+        pass
+
     def OnTypeChoice(self, event):
         index = event.GetSelection()
         self._replaceSchemeEditor(event.GetString() if index > 0 else None)
