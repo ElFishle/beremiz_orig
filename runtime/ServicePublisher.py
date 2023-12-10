@@ -75,8 +75,8 @@ class ServicePublisher(object):
         self.server.register_service(
             zeroconf.ServiceInfo(service_type,
                                  self.service_name,
-                                 self.ip_32b,
-                                 self.port,
+                                 addresses = [self.ip_32b],
+                                 port = self.port,
                                  properties=self.serviceproperties))
         self.retrytimer = None
 
@@ -88,8 +88,8 @@ class ServicePublisher(object):
             self.server.unregister_service(
                 zeroconf.ServiceInfo(service_type,
                                      self.service_name,
-                                     self.ip_32b,
-                                     self.port,
+                                     addresses = [self.ip_32b],
+                                     port = self.port,
                                      properties=self.serviceproperties))
             self.server.close()
             self.server = None
