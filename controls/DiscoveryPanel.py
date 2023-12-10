@@ -179,11 +179,11 @@ class DiscoveryPanel(wx.Panel, listmix.ColumnSorterMixin):
         return item.GetText()
 
     def OnItemSelected(self, event):
-        self.SetURI(event.m_itemIndex)
+        self.SetURI(event.GetIndex())
         event.Skip()
 
     def OnItemActivated(self, event):
-        self.SetURI(event.m_itemIndex)
+        self.SetURI(event.GetIndex())
         self.parent.EndModal(wx.ID_OK)
         event.Skip()
 
@@ -210,6 +210,10 @@ class DiscoveryPanel(wx.Panel, listmix.ColumnSorterMixin):
             #     connect_type = self.getColumnText(self.LatestSelection, 1)
             #     return str("MDNS://%s" % svcname)
         return None
+
+    def update_service(self, zeroconf, _type, name):
+        self.remove_service(zeroconf, _type, name)
+        self.add_service(zeroconf, _type, name)
 
     def remove_service(self, zeroconf, _type, name):
         wx.CallAfter(self._removeService, name)
@@ -242,17 +246,17 @@ class DiscoveryPanel(wx.Panel, listmix.ColumnSorterMixin):
         if info is None:
             return
         svcname = name.split(".")[0]
-        typename = info.properties.get("protocol", None)
-        ip = str(socket.inet_ntoa(info.address))
+        typename = info.properties.get(b"protocol", None).decode('ascii')
+        ip = str(socket.inet_ntoa(info.addresses[0]))
         port = info.port
 
         num_items = self.ServicesList.GetItemCount()
 
         # display the new data in the list
-        new_item = self.ServicesList.InsertStringItem(num_items, svcname)
-        self.ServicesList.SetStringItem(new_item, 1, "%s" % typename)
-        self.ServicesList.SetStringItem(new_item, 2, "%s" % ip)
-        self.ServicesList.SetStringItem(new_item, 3, "%s" % port)
+        new_item = self.ServicesList.InsertItem(num_items, svcname)
+        self.ServicesList.SetItem(new_item, 1, "%s" % typename)
+        self.ServicesList.SetItem(new_item, 2, "%s" % ip)
+        self.ServicesList.SetItem(new_item, 3, "%s" % port)
 
         # record the new data for the ColumnSorterMixin
         # we assign every list item a unique id (that won't change when items
