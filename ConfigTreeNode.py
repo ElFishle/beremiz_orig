@@ -640,7 +640,7 @@ class ConfigTreeNode(object):
         # Get the base xml tree
         if self.MandatoryParams:
             try:
-                basexmlfile = open(self.ConfNodeBaseXmlFilePath(CTNName), 'r')
+                basexmlfile = open(self.ConfNodeBaseXmlFilePath(CTNName), 'rb')
                 self.BaseParams, error = _BaseParamsParser.LoadXMLString(basexmlfile.read())
                 if error is not None:
                     (fname, lnum, src) = ((ConfNodeName + " BaseParams",) + error)

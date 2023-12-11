@@ -1846,7 +1846,9 @@ class XMLClassParser(etree.XMLParser):
         self.ClassLookup = class_lookup
 
     def LoadXMLString(self, xml_string):
-        tree = etree.fromstring(xml_string.encode(), self)
+        if isinstance(xml_string, str):
+            xml_string = xml_string.encode('utf-8')
+        tree = etree.fromstring(xml_string, self)
         if not self.XSDSchema.validate(tree):
             error = self.XSDSchema.error_log.last_error
             return tree, (error.line, error.message)
