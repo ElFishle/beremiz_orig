@@ -25,9 +25,11 @@ void __publish_debug (void){}
 #include <string.h>
 #include <stdio.h>
 
+typedef int dbgvardsc_num_index_t;
+
 typedef struct {
 	char * name;
-	unsigned int idx;
+	dbgvardsc_num_index_t idx;
 } dbgvardsc_index_t;
 
 typedef unsigned short trace_buf_offset_t;
@@ -44,7 +46,7 @@ typedef unsigned short trace_buf_offset_t;
 static long trace_buffer_state = BUFFER_EMPTY;
 
 typedef struct trace_item_s {
-    dbgvardsc_index_t dbgvardsc_index;
+    dbgvardsc_num_index_t dbgvardsc_index;
 } trace_item_t;
 
 trace_item_t trace_list[TRACE_LIST_SIZE];
@@ -64,7 +66,7 @@ static const char *trace_buffer_end = trace_buffer + TRACE_BUFFER_SIZE;
 #define FORCE_LIST_SIZE 256
 
 typedef struct force_item_s {
-    dbgvardsc_index_t dbgvardsc_index;
+    dbgvardsc_num_index_t dbgvardsc_index;
     void *value_pointer_backup;
 } force_item_t;
 
@@ -266,7 +268,7 @@ void __publish_debug(void)
             /* iterate over force list */
             while(!stop && force_list_apply_cursor < force_list_addvar_cursor){
                 dbgvardsc_t *dsc = &dbgvardsc[
-                    force_list_apply_cursor->dbgvardsc_index.idx];
+                    force_list_apply_cursor->dbgvardsc_index];
                 void *varp = dsc->ptr;
                 __IEC_types_enum vartype = dsc->type;
                 switch(vartype){
@@ -289,7 +291,7 @@ void __publish_debug(void)
                 char* next_cursor;
 
                 dbgvardsc_t *dsc = &dbgvardsc[
-                    trace_list_collect_cursor->dbgvardsc_index.idx];
+                    trace_list_collect_cursor->dbgvardsc_index];
 
                 UnpackVar(dsc, &value_p, NULL, &size);
 
@@ -393,10 +395,10 @@ void __publish_debug(void)
 
 void ResetDebugVariables(void);
 
-int RegisterDebugVariable(dbgvardsc_index_t idx, void* force)
+int RegisterDebugVariable(dbgvardsc_num_index_t idx, void* force)
 {
     int error_code = 0;
-    if(idx.idx < sizeof(dbgvardsc)/sizeof(dbgvardsc_t)){
+    if(idx < sizeof(dbgvardsc)/sizeof(dbgvardsc_t)){
         /* add to trace_list, inc trace_list_addvar_cursor*/
         if(trace_list_addvar_cursor <= trace_list_end){
             trace_list_addvar_cursor->dbgvardsc_index = idx;
@@ -407,7 +409,7 @@ int RegisterDebugVariable(dbgvardsc_index_t idx, void* force)
         }
         if(force){
             if(force_list_addvar_cursor <= force_list_end){
-                dbgvardsc_t *dsc = &dbgvardsc[idx.idx];
+                dbgvardsc_t *dsc = &dbgvardsc[idx];
                 void *varp = dsc->ptr;
                 __IEC_types_enum vartype = dsc->type;
 
@@ -459,7 +461,7 @@ void ResetDebugVariables(void)
     /* Restore forced variables */
     while(force_list_apply_cursor < force_list_addvar_cursor){
         dbgvardsc_t *dsc = &dbgvardsc[
-            force_list_apply_cursor->dbgvardsc_index.idx];
+            force_list_apply_cursor->dbgvardsc_index];
         void *varp = dsc->ptr;
         switch(dsc->type){
             __ANY(ResetForcedVariable_case_t)
