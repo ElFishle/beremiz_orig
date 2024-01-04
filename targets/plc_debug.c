@@ -25,7 +25,11 @@ void __publish_debug (void){}
 #include <string.h>
 #include <stdio.h>
 
-typedef unsigned int dbgvardsc_index_t;
+typedef struct {
+	char * name;
+	unsigned int idx;
+} dbgvardsc_index_t;
+
 typedef unsigned short trace_buf_offset_t;
 
 #define BUFFER_EMPTY 0
@@ -93,7 +97,7 @@ typedef const struct {
     __IEC_types_enum type;
 } dbgvardsc_t;
 
-static const dbgvardsc_t dbgvardsc[] = {
+const dbgvardsc_t dbgvardsc[] = {
 %(variable_decl_array)s
 };
 
@@ -118,7 +122,7 @@ void __for_each_variable_do(__for_each_variable_do_fp fp)
 
 %(var_access_code)s
 
-void Remind(unsigned int offset, unsigned int count, void * p);
+void Remind(char * name, __IEC_types_enum type, unsigned int offset, unsigned int count, void * p);
 
 extern int CheckRetainBuffer(void);
 extern void InitRetain(void);
@@ -150,12 +154,12 @@ void __init_debug(void)
             char* next_cursor;
 
             dbgvardsc_t *dsc = &dbgvardsc[
-                retain_list[retain_list_collect_cursor]];
+                retain_list[retain_list_collect_cursor].idx];
 
             UnpackVar(dsc, &value_p, NULL, &size);
 
             /* if buffer not full */
-            Remind(retain_offset, size, value_p);
+            Remind(retain_list[retain_list_collect_cursor].name, dsc->type, retain_offset, size, value_p);
             /* increment cursor according size*/
             retain_offset += size;
 
@@ -186,7 +190,7 @@ void __retrieve_debug(void)
 {
 }
 
-void Retain(unsigned int offset, unsigned int count, void * p);
+void Retain(char * name, __IEC_types_enum type, unsigned int offset, unsigned int count, void * p);
 
 /* Return size of all retain variables */
 unsigned int GetRetainSize(void)
@@ -201,7 +205,7 @@ unsigned int GetRetainSize(void)
         char* next_cursor;
 
         dbgvardsc_t *dsc = &dbgvardsc[
-            retain_list[retain_list_collect_cursor]];
+            retain_list[retain_list_collect_cursor].idx];
 
         UnpackVar(dsc, &value_p, NULL, &size);
 
@@ -262,7 +266,7 @@ void __publish_debug(void)
             /* iterate over force list */
             while(!stop && force_list_apply_cursor < force_list_addvar_cursor){
                 dbgvardsc_t *dsc = &dbgvardsc[
-                    force_list_apply_cursor->dbgvardsc_index];
+                    force_list_apply_cursor->dbgvardsc_index.idx];
                 void *varp = dsc->ptr;
                 __IEC_types_enum vartype = dsc->type;
                 switch(vartype){
@@ -285,7 +289,7 @@ void __publish_debug(void)
                 char* next_cursor;
 
                 dbgvardsc_t *dsc = &dbgvardsc[
-                    trace_list_collect_cursor->dbgvardsc_index];
+                    trace_list_collect_cursor->dbgvardsc_index.idx];
 
                 UnpackVar(dsc, &value_p, NULL, &size);
 
@@ -329,12 +333,12 @@ void __publish_debug(void)
         char* next_cursor;
 
         dbgvardsc_t *dsc = &dbgvardsc[
-            retain_list[retain_list_collect_cursor]];
+            retain_list[retain_list_collect_cursor].idx];
 
         UnpackVar(dsc, &value_p, NULL, &size);
 
         /* if buffer not full */
-        Retain(retain_offset, size, value_p);
+        Retain(retain_list[retain_list_collect_cursor].name, dsc->type, retain_offset, size, value_p);
         /* increment cursor according size*/
         retain_offset += size;
 
@@ -392,7 +396,7 @@ void ResetDebugVariables(void);
 int RegisterDebugVariable(dbgvardsc_index_t idx, void* force)
 {
     int error_code = 0;
-    if(idx < sizeof(dbgvardsc)/sizeof(dbgvardsc_t)){
+    if(idx.idx < sizeof(dbgvardsc)/sizeof(dbgvardsc_t)){
         /* add to trace_list, inc trace_list_addvar_cursor*/
         if(trace_list_addvar_cursor <= trace_list_end){
             trace_list_addvar_cursor->dbgvardsc_index = idx;
@@ -403,7 +407,7 @@ int RegisterDebugVariable(dbgvardsc_index_t idx, void* force)
         }
         if(force){
             if(force_list_addvar_cursor <= force_list_end){
-                dbgvardsc_t *dsc = &dbgvardsc[idx];
+                dbgvardsc_t *dsc = &dbgvardsc[idx.idx];
                 void *varp = dsc->ptr;
                 __IEC_types_enum vartype = dsc->type;
 
@@ -455,7 +459,7 @@ void ResetDebugVariables(void)
     /* Restore forced variables */
     while(force_list_apply_cursor < force_list_addvar_cursor){
         dbgvardsc_t *dsc = &dbgvardsc[
-            force_list_apply_cursor->dbgvardsc_index];
+            force_list_apply_cursor->dbgvardsc_index.idx];
         void *varp = dsc->ptr;
         switch(dsc->type){
             __ANY(ResetForcedVariable_case_t)

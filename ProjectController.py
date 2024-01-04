@@ -1096,7 +1096,7 @@ class ProjectController(ConfigTreeNode, PLCControler):
                 "}")
 
             if v["retain"] == "1":
-                retain_indexes.append("/* "+v["C_path"]+" */ "+str(i))
+                retain_indexes.append('{ "'+v["IEC_path"]+'", '+str(i) + '}')
 
         debug_code = targets.GetCode("plc_debug.c") % {
             "programs_declarations": "\n".join(["extern %(type)s %(C_path)s;" %
